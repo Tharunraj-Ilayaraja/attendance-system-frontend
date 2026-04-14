@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const api = process.env.REACT_APP_API_URL;
+
 const API = axios.create({
-  baseURL: "https://attendance-system-backend-tr-emdjftdja6f8c2fp.centralindia-01.azurewebsites.net/api"
+  baseURL: api
+  
 });
 
 // ✅ Auto attach token
