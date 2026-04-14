@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../services/api";
+import "../styles/styles.css";
 
 function TeacherDashboard() {
   const [session, setSession] = useState(null);
@@ -14,13 +15,11 @@ function TeacherDashboard() {
           longitude: pos.coords.longitude
         });
 
-        // ✅ store correctly
         setSession(res.data.session);
         setQrImage(res.data.qrImage);
-        setOtp(null); // reset OTP
+        setOtp(null);
       } catch (err) {
-        console.log(err);
-        alert(err.response?.data?.message || "Failed to create session");
+        alert("Failed to create session");
       }
     });
   };
@@ -35,24 +34,34 @@ function TeacherDashboard() {
   };
 
   return (
-    <div>
-      <button onClick={createSession}>Start Session</button>
+    <div className="container">
+      <div className="card">
+        <h2>👨‍🏫 Teacher Panel</h2>
 
-      {session && (
-        <div>
-          <h3>Scan this QR</h3>
+        <button onClick={createSession}>
+          🚀 Start Session
+        </button>
 
-          {/* ✅ QR IMAGE */}
-          {qrImage && <img src={qrImage} alt="QR Code" />}
+        {session && (
+          <div className="qr-box">
+            <h3>Scan QR</h3>
 
-          {/* ✅ End session button */}
-          <br />
-          <button onClick={endSession}>Stop QR & Reveal OTP</button>
+            {qrImage && (
+              <img src={qrImage} alt="QR Code" width="200" />
+            )}
 
-          {/* ✅ OTP shown ONLY after end */}
-          {otp && <h3>OTP: {otp}</h3>}
-        </div>
-      )}
+            <button onClick={endSession}>
+              ⛔ Stop Session
+            </button>
+
+            {otp && (
+              <div className="otp">
+                OTP: {otp}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
