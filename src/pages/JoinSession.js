@@ -32,7 +32,7 @@ function JoinSession() {
       }
     );
 
-  }, []);
+  }, [token]);
 
   return <h2>Verifying location...</h2>;
 }
