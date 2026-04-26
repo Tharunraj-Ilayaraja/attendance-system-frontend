@@ -12,10 +12,7 @@ function Login() {
 
       localStorage.setItem("token", res.data.token);
 
-      if (res.data.role === "student")
-        window.location.href = "/scan";
-      else
-        window.location.href = "/teacher";
+      window.location.href = "/teacher";
 
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
