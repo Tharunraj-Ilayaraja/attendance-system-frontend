@@ -32,7 +32,7 @@ function SecurePage() {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
 
-  }, []);
+  }, [session_id, join_token]);
 
   const submit = async () => {
     if (!regNo || !otp) {
