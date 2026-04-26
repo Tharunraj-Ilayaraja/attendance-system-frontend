@@ -11,7 +11,9 @@ function SecurePage() {
 
   useEffect(() => {
 
-    
+    console.log("FULL URL:", window.location.href);
+    console.log("SESSION ID:", session_id);
+    console.log("JOIN TOKEN:", join_token);
 
     // 🔒 Fullscreen
     document.documentElement.requestFullscreen().catch(() => {});
