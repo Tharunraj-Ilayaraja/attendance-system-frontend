@@ -9,6 +9,9 @@ function TeacherDashboard() {
 
   const [sessionsList, setSessionsList] = useState([]);
   const [attendance, setAttendance] = useState([]);
+ 
+
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   const createSession = async () => {
     navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -36,100 +39,140 @@ function TeacherDashboard() {
     }
   };
 
-  // 🔥 NEW: Get sessions
   const fetchSessions = async () => {
     try {
       const res = await API.get("/session/teacher/sessions");
       setSessionsList(res.data);
       setAttendance([]);
+      setActiveSessionId(null);
     } catch (err) {
-      console.log(err);
       alert("Failed to fetch sessions");
     }
   };
 
-  // 🔥 NEW: Get attendance
   const fetchAttendance = async (session_id) => {
-    console.log("clicked");
+    // 🔥 Toggle logic
+    if (activeSessionId === session_id) {
+      setAttendance([]);
+      setActiveSessionId(null);
+      return;
+    }
+
     try {
       const res = await API.get(`/session/attendance/${session_id}`);
       setAttendance(res.data);
+      setActiveSessionId(session_id);
     } catch (err) {
       alert("Failed to fetch attendance");
     }
   };
 
+  // 🔥 DOWNLOAD CSV FUNCTION
+  const downloadCSV = () => {
+    const current = sessionsList.find(s => s.id === activeSessionId);
+
+    if (!current || attendance.length === 0) {
+      alert("Select a session first");
+      return;
+    }
+
+
+
+    const sessionTitle = `${new Date(current.start_time).toLocaleString()} - #${current.id}`;
+
+     // 🔥 Count
+    const count = attendance.length;
+
+     // 🔥 Build CSV
+    let csv = "";
+     csv += `Session: ${sessionTitle}\n`;
+     csv += `Count: ${count}\n\n`;
+     csv += "USNID,Name\n";
+
+    attendance.forEach((s) => {
+      csv += `'${s.usnid},${s.name}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+
+    const fileName = `session_${current.id}_${new Date(current.start_time)
+      .toLocaleString()
+      .replace(/[/:]/g, "-")}.csv`;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="container">
-      <div className="card">
+    <div className="main-layout">
+
+      {/* 🔵 SECTION 1 */}
+      <div className="section section1">
         <h2>👨‍🏫 Teacher Panel</h2>
 
-        <button onClick={createSession}>
-          🚀 Start Session
-        </button>
+        <button onClick={createSession}>🚀 Start Session</button>
 
-        {/* ACTIVE SESSION */}
         {session && (
           <div className="qr-box">
             <h3>Scan QR</h3>
 
-            {qrImage && (
-              <img src={qrImage} alt="QR Code" width="200" />
-            )}
+            {qrImage && <img src={qrImage} alt="QR Code" width="200" />}
 
-            <button onClick={endSession}>
-              ⛔ Stop Session
-            </button>
+            <button onClick={endSession}>⛔ Stop Session</button>
 
-            {otp && (
-              <div className="otp">
-                OTP: {otp}
-              </div>
-            )}
-          </div>
-        )}
-
-        <hr />
-
-        {/* 🔥 VIEW ATTENDANCE BUTTON */}
-        <button onClick={fetchSessions}>
-          📋 View Attendance
-        </button>
-
-        {/* 🔥 SESSION LIST */}
-        {sessionsList.length > 0 && (
-          <div>
-            <h3>Sessions</h3>
-
-            {sessionsList.map((s) => (
-              <div key={s.id} style={{ marginBottom: "10px" }}>
-                <span>
-                  {new Date(s.start_time).toLocaleString()} - Session {s.id}
-                </span>
-
-                <button onClick={() => fetchAttendance(s.id)}>
-                  View
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 🔥 ATTENDANCE LIST */}
-        {attendance.length > 0 && (
-          <div>
-            <h3>Attendance</h3>
-
-            <ul>
-              {attendance.map((student, index) => (
-                <li key={index}>
-                  {student.name} ({student.reg_no})
-                </li>
-              ))}
-            </ul>
+            {otp && <div className="otp">OTP: {otp}</div>}
           </div>
         )}
       </div>
+
+      {/* 🟢 SECTION 2 */}
+      <div className="section section2">
+
+        {/* 🔥 VIEW + DOWNLOAD BUTTONS */}
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={fetchSessions}>📋 View Sessions</button>
+
+          <button
+            onClick={downloadCSV}
+            disabled={!activeSessionId}
+          >
+            ⬇ Download
+          </button>
+        </div>
+
+        <div className="scroll-box">
+          {sessionsList.map((s) => (
+            <div key={s.id} className="session-item">
+              <span>
+                {new Date(s.start_time).toLocaleString()} - #{s.id}
+              </span>
+
+              <button onClick={() => fetchAttendance(s.id)}>
+                {activeSessionId === s.id ? "Hide" : "View"}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 🟣 SECTION 3 */}
+      <div className="section section3">
+        <h3>Attendance ({attendance.length})</h3>
+
+        <div className="scroll-box">
+          {attendance.map((student, index) => (
+            <div key={index}>
+              {student.usnid} ({student.name})
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 }
