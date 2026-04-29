@@ -9,6 +9,7 @@ function TeacherDashboard() {
 
   const [sessionsList, setSessionsList] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [aiReport, setAiReport] = useState(null);
  
 
   const [activeSessionId, setActiveSessionId] = useState(null);
@@ -66,6 +67,23 @@ function TeacherDashboard() {
       alert("Failed to fetch attendance");
     }
   };
+
+  const fetchAnalysis = async () => {
+  try {
+    
+
+    const res = await API.get("/session/analysis");
+
+    setAiReport(res.data.aiReport);
+
+    // clear attendance view
+    setAttendance([]);
+    setActiveSessionId(null);
+
+  } catch (err) {
+    alert(err);
+  }
+};
 
   // 🔥 DOWNLOAD CSV FUNCTION
   const downloadCSV = () => {
@@ -134,14 +152,18 @@ function TeacherDashboard() {
       <div className="section section2">
 
         {/* 🔥 VIEW + DOWNLOAD BUTTONS */}
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={fetchSessions}>📋 View Sessions</button>
+       <div style={{ display: "flex", gap: "10px" }}>
+           <button onClick={fetchSessions}>📋 View Sessions</button>
+
+           <button onClick={fetchAnalysis}>
+             📊 See Analysis
+           </button>
 
           <button
-            onClick={downloadCSV}
-            disabled={!activeSessionId}
+             onClick={downloadCSV}
+             disabled={!activeSessionId}
           >
-            ⬇ Download
+          ⬇ Download
           </button>
         </div>
 
@@ -162,15 +184,47 @@ function TeacherDashboard() {
 
       {/* 🟣 SECTION 3 */}
       <div className="section section3">
-        <h3>Attendance ({attendance.length})</h3>
 
-        <div className="scroll-box">
-          {attendance.map((student, index) => (
-            <div key={index}>
-              {student.usnid} ({student.name})
-            </div>
-          ))}
-        </div>
+
+       {/* 🔥 HEADER */}
+         <h3>
+             {aiReport ? "AI Analysis" : `Attendance (${attendance.length})`}
+           </h3>
+
+          {/* 🔥 CLEAR BUTTON */}
+          {(aiReport || attendance.length > 0) && (
+        <button
+           onClick={() => {
+             setAiReport(null);
+           setAttendance([]);
+               setActiveSessionId(null);
+            }}
+                style={{ marginBottom: "10px" }}
+                                            >
+               ❌ Clear
+          </button>
+      )}
+
+<div className="scroll-box">
+
+  {/* 🔥 SHOW AI REPORT */}
+  {aiReport && (
+    <div style={{ whiteSpace: "pre-wrap" }}>
+      {aiReport}
+    </div>
+  )}
+
+  {/* 🔥 SHOW ATTENDANCE */}
+  {!aiReport && attendance.map((student, index) => (
+    <div key={index}>
+      {student.usnid} ({student.name})
+    </div>
+  ))}
+
+</div>
+
+
+
       </div>
 
     </div>
